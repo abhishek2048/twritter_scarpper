@@ -1,3 +1,4 @@
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -5,72 +6,78 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from pymongo import MongoClient
 import time
+from dotenv import load_dotenv
+import os
 
-# MongoDB Configuration
-client = MongoClient('mongodb+srv://Abhishek:DYvGt8z7jItKTnuL@abhishek.wcka65c.mongodb.net')
+
+load_dotenv()
+
+
+MONGODB_URL = os.getenv("MONGODB_URL")
+client = MongoClient(MONGODB_URL)
 db = client.twitter_trends
 collection = db.trends
 
-# Twitter Credentials
-TWITTER_USERNAME = "abhishek_13042"
-TWITTER_PASSWORD = "abhishek2048"
 
-# ProxyMesh Configuration
-PROXY_URL = "http://abhishek2021:2021am28ab@45.32.86.6:31280"  # Replace with your ProxyMesh credentials
+TWITTER_USERNAME = os.getenv("TWITTER_USERNAME")
+TWITTER_PASSWORD = os.getenv("TWITTER_PASSWORD")
+
+
+PROXY_URL = os.getenv("PROXY_URL")
 
 def setup_chrome():
     options = webdriver.ChromeOptions()
-    options.binary_location = "C:/Program Files/Google/Chrome/Application/chrome.exe"  # Path to Chrome
+    options.binary_location = "C:/Program Files/Google/Chrome/Application/chrome.exe"  
 
-    # Add ProxyMesh proxy settings
-    options.add_argument(f'--proxy-server={PROXY_URL}')  # Use ProxyMesh
+  
+    options.add_argument(f'--proxy-server={PROXY_URL}') 
 
-    options.add_argument('--disable-dev-shm-usage')  # Prevent resource issues
-    options.add_argument('--no-sandbox')            # Avoid sandboxing issues
-    options.add_argument('--disable-gpu')           # Disable GPU acceleration
-    options.add_argument('--start-maximized')       # Start in maximized mode
-    options.add_argument('--log-level=3')           # Suppress logs
+    options.add_argument('--disable-dev-shm-usage')  
+    options.add_argument('--no-sandbox')           
+    options.add_argument('--disable-gpu')         
+    options.add_argument('--start-maximized')      
+    options.add_argument('--log-level=3')         
     return webdriver.Chrome(options=options)
 
 def scrape_twitter_trends():
     driver = None
     try:
-        # Initialize WebDriver
+     
         driver = setup_chrome()
 
-        # Open Twitter login page
+   
         driver.get('https://twitter.com/login')
 
-        # Step 1: Enter Username and Press Enter
+        
         try:
             username_field = WebDriverWait(driver, 60).until(
                 EC.visibility_of_element_located((By.NAME, 'text'))
             )
             username_field.send_keys(TWITTER_USERNAME)
-            username_field.send_keys(Keys.RETURN)  # Press Enter
+            username_field.send_keys(Keys.RETURN)  
         except Exception as e:
             print(f"Error entering username: {e}")
-            driver.save_screenshot('error_username.png')  # Save screenshot for debugging
-            time.sleep(180)  # Keep browser open for 3 minutes
+            driver.save_screenshot('error_username.png')  
+            time.sleep(180)  
             return
 
-        # Step 2: Enter Password and Press Enter
+       
         try:
             password_field = WebDriverWait(driver, 60).until(
                 EC.visibility_of_element_located((By.NAME, 'password'))
             )
             password_field.send_keys(TWITTER_PASSWORD)
-            password_field.send_keys(Keys.RETURN)  # Press Enter
+            password_field.send_keys(Keys.RETURN)  
         except Exception as e:
             print(f"Error entering password: {e}")
-            driver.save_screenshot('error_password.png')  # Save screenshot for debugging
-            time.sleep(180)  # Keep browser open for 3 minutes
+            driver.save_screenshot('error_password.png')  
+            time.sleep(180) 
             return
 
-        # Wait for Home Page to Load
+       
         time.sleep(30)
 
-        # Scrape Twitter trends from "What’s happening" section
+       
         try:
             trends_section = WebDriverWait(driver, 60).until(
                 EC.presence_of_element_located((By.XPATH, '//section[contains(@aria-labelledby, "accessible-list")]'))
@@ -79,11 +86,11 @@ def scrape_twitter_trends():
             top_trends = [trend.text for trend in trends[:5] if trend.text.strip()]
         except Exception as e:
             print(f"Error scraping trends: {e}")
-            driver.save_screenshot('error_trends.png')  # Save screenshot for debugging
-            time.sleep(180)  # Keep browser open for 3 minutes
+            driver.save_screenshot('error_trends.png')  
+            time.sleep(180) 
             return
 
-        # Store in MongoDB
+       
         data = {
             'trends': top_trends,
             'timestamp': time.time()
@@ -91,7 +98,7 @@ def scrape_twitter_trends():
         collection.insert_one(data)
         print("Data successfully inserted into MongoDB:", data)
 
-        # Keep browser open for 3 minutes
+        
         print("Browser will remain open for 3 minutes. Close it manually if needed.")
         time.sleep(180)
 

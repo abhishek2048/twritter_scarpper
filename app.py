@@ -1,11 +1,17 @@
 from flask import Flask, jsonify, render_template
 from twitter_scraper import scrape_twitter_trends
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
-# Configure MongoDB
-client = MongoClient('mongodb+srv://Abhishek:DYvGt8z7jItKTnuL@abhishek.wcka65c.mongodb.net/twitter_trends.trends')
+# Configure MongoDB using environment variable
+MONGODB_URL = os.getenv('MONGODB_URI')
+client = MongoClient(MONGODB_URL)
 db = client.twitter_trends
 collection = db.trends
 
