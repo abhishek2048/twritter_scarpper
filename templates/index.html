@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Trends</title>
+    <script>
+        function startScraping() {
+            fetch('/scrape').then(response => response.text()).then(data => {
+                console.log(data);
+                fetchData();
+            });
+        }
+
+        function fetchData() {
+            fetch('/data').then(response => response.json()).then(data => {
+                document.getElementById('trends').innerText = JSON.stringify(data, null, 2);
+            });
+        }
+
+        window.onload = fetchData;
+    </script>
+</head>
+<body>
+    <h1>Twitter Trends</h1>
+    <button onclick="startScraping()">Start Scraping</button>
+    <pre id="trends"></pre>
+</body>
+</html>
